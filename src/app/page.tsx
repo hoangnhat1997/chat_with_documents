@@ -1,6 +1,9 @@
 "use client";
 
+import { v4 as uuidv4 } from "uuid";
+
 import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
 type Message = Readonly<{
   readonly role: "user" | "assistant";
@@ -8,12 +11,23 @@ type Message = Readonly<{
 }>;
 
 export default function Home() {
-  const userId: any = uuidv4();
-  localStorage.setItem("userId", userId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>();
 
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
+  );
+
   useEffect(() => {
+    const userId = localStorage.getItem("userId") || uuidv4();
+    localStorage.setItem("userId", userId);
+
+    (async () => {
+      const { error } = await supabase
+        .from("userInfo")
+        .insert({ userId: userId });
+    })();
     (async () => {
       const res = await fetch("/api/chat");
       const { messages } = await res.json();
@@ -86,7 +100,4 @@ export default function Home() {
       </div>
     </div>
   );
-}
-function uuidv4() {
-  throw new Error("Function not implemented.");
 }
