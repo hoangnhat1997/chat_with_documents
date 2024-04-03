@@ -1,37 +1,35 @@
+import { supabase } from "@/database/supabase";
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const db: any = {};
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
-);
 
 export const GET = async (req: NextRequest): Promise<any> => {
   const userId = localStorage.getItem("userId");
-  const messages = db.getMessages(userId);
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("message")
+    .eq("userId", userId);
 
-  return NextResponse.json({ messages });
+  return NextResponse.json({ data });
 };
 
 export const POST = async (req: NextRequest): Promise<any> => {
   const { id, input } = await req.json();
 
-  // const messages = db.getMessages(id);
+  // const { data, error } = await supabase
+  //   .from("chat_messages")
+  //   .select("message")
+  //   .eq("userId", id);
 
-  await db.addMessage(id, "user", input);
-  const messages = db.getMessages(id);
+  // // await db.addMessage(id, "user", input);
+  // const messages = { ...data, input };
 
-  const res = await fetch(
-    "https://github-copilot.idex.vn/v1/chat/completions",
-    {
-      method: "POST",
-      body: JSON.stringify({ messages }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const res = await fetch(`${process.env.API_CHAT_OPEN_AI}`, {
+    method: "POST",
+    body: JSON.stringify({ input }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   const json = await res.json();
 
   if (!json["choices"]) {
@@ -42,7 +40,7 @@ export const POST = async (req: NextRequest): Promise<any> => {
 
   const content = json["choices"][0]["message"]["content"];
 
-  await db.addMessage(id, "assistant", content);
+  // await db.addMessage(id, "assistant", content);
 
   return NextResponse.json({ content });
 };

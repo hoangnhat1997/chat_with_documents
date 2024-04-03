@@ -3,7 +3,8 @@
 import { v4 as uuidv4 } from "uuid";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/database/supabase";
+import { POST } from "./api/chat/route";
 
 type Message = Readonly<{
   readonly role: "user" | "assistant";
@@ -14,29 +15,33 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>();
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
-  );
+  // useEffect(() => {
+  //   const userId = localStorage.getItem("userId") || uuidv4();
+  //   localStorage.setItem("userId", userId);
+  //   (async () => {
+  //     const { data } = await supabase
+  //       .from("chat_messages")
+  //       .select()
+  //       .eq("userId", userId);
+  //     if (data) {
+  //       return;
+  //     }
+  //     const { error } = await supabase
+  //       .from("chat_messages")
+  //       .insert({ userId: userId });
+  //   })();
+  // }, []);
 
-  useEffect(() => {
-    const userId = localStorage.getItem("userId") || uuidv4();
-    localStorage.setItem("userId", userId);
+  // useEffect(() => {
+  //   (async () => {
+  //     const res = await fetch("/api/chat");
+  //     const { messages } = await res.json();
 
-    (async () => {
-      const { error } = await supabase
-        .from("userInfo")
-        .insert({ userId: userId });
-    })();
-    (async () => {
-      const res = await fetch("/api/chat");
-      const { messages } = await res.json();
+  //     setMessages(messages);
+  //   })();
 
-      setMessages(messages);
-    })();
-
-    return () => {};
-  }, []);
+  //   return () => {};
+  // }, []);
 
   const handleSubmit = async () => {
     if (!input) {
