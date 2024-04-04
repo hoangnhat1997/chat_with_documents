@@ -3,8 +3,6 @@
 import { v4 as uuidv4 } from "uuid";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/database/supabase";
-import { POST } from "./api/chat/route";
 
 type Message = Readonly<{
   readonly role: "user" | "assistant";
@@ -32,16 +30,15 @@ export default function Home() {
   //   })();
   // }, []);
 
-  // useEffect(() => {
-  //   (async () => {
-  //     const res = await fetch("/api/chat");
-  //     const { messages } = await res.json();
+  useEffect(() => {
+    const userId = localStorage.getItem("userId") || uuidv4();
+    localStorage.setItem("userId", userId);
 
-  //     setMessages(messages);
-  //   })();
-
-  //   return () => {};
-  // }, []);
+    (async () => {
+      // const res = await fetch("/api/chat");
+      // console.log("res", res.json());
+    })();
+  }, []);
 
   const handleSubmit = async () => {
     if (!input) {
@@ -59,6 +56,7 @@ export default function Home() {
     const res = await fetch("/api/chat", {
       method: "POST",
       body: JSON.stringify({
+        userId: localStorage.getItem("userId"),
         messages: [
           ...messages,
           {
