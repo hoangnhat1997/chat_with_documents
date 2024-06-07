@@ -3,6 +3,7 @@
 import { v4 as uuidv4 } from "uuid";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/database/supabase";
 
 type Message = Readonly<{
   readonly role: "user" | "assistant";
@@ -13,22 +14,29 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>();
 
-  // useEffect(() => {
-  //   const userId = localStorage.getItem("userId") || uuidv4();
-  //   localStorage.setItem("userId", userId);
-  //   (async () => {
-  //     const { data } = await supabase
-  //       .from("chat_messages")
-  //       .select()
-  //       .eq("userId", userId);
-  //     if (data) {
-  //       return;
-  //     }
-  //     const { error } = await supabase
-  //       .from("chat_messages")
-  //       .insert({ userId: userId });
-  //   })();
-  // }, []);
+  useEffect(() => {
+    const initializeSupabase = async () => {
+      const userId = localStorage.getItem("userId") || uuidv4();
+      localStorage.setItem("userId", userId);
+
+      try {
+        const { data } = await supabase
+          .from("chat_messages")
+          .select()
+          .eq("userId", userId);
+
+        if (data?.length != 0) {
+          return;
+        }
+
+        await supabase.from("chat_messages").insert([{ userId: userId }]);
+      } catch (error) {
+        console.error("Error initializing Supabase:", error);
+      }
+    };
+
+    initializeSupabase();
+  }, []);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId") || uuidv4();
